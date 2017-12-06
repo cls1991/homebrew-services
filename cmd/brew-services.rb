@@ -305,17 +305,12 @@ module ServicesCli
     end
 
     Array(target).each do |service|
-      temp = Tempfile.new(service.label)
-      temp << service.generate_plist(custom_plist)
-      temp.flush
+      source ||= target.plist.file? ? target.plist : target.formula.plist
 
       rm service.dest if service.dest.exist?
       service.dest_dir.mkpath unless service.dest_dir.directory?
-      cp temp.path, service.dest
+      ln_s source, service.dest
       chmod 0644, service.dest
-
-      # Clear tempfile.
-      temp.close
 
       launchctl_load(service.dest.to_s, "started", service)
     end
